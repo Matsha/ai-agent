@@ -1,9 +1,11 @@
+from math import e
+
 from dotenv import load_dotenv
 import os
 from openai import OpenAI
 import argparse
 from prompts import system_prompt
-from call_function import available_functions
+from call_function import available_functions, call_function
 import json
 
 load_dotenv()
@@ -39,6 +41,11 @@ if message.tool_calls != None:
     for tool_call in message.tool_calls:
         tool_args = json.loads(tool_call.function.arguments or "{}")
         print(f"Calling function: {tool_call.function.name}({tool_args})")
+        result_message = call_function(tool_call, args.verbose)
+        if result_message["content"] == None:
+            raise Exception
+        if args.verbose:
+            print(f"-> {result_message['content']}")
 print(message.content)
 
 
