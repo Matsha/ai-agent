@@ -4,6 +4,7 @@ from openai import OpenAI
 import argparse
 from prompts import system_prompt
 from call_function import available_functions
+import json
 
 load_dotenv()
 api_key = os.environ.get("OPENROUTER_API_KEY")
@@ -18,9 +19,6 @@ parser.add_argument("user_prompt",type=str, help="user prompt")
 parser.add_argument("--verbose", action="store_true", help="Enable verbose output")
 args = parser.parse_args()
 
-system_message = [
-
-]
 messages = [
     {"role": "system", "content": system_prompt},
     {"role": "user", "content": args.user_prompt}
@@ -36,7 +34,12 @@ if args.verbose:
     print(f"Prompt tokens: {response.usage.prompt_tokens}")
     print(f"Response tokens: {response.usage.completion_tokens}")
     print(f"User prompt: {args.user_prompt}")
-print(response.choices[0].message.content)
+message = response.choices[0].message
+if message.tool_calls != None:
+    for tool_call in message.tool_calls:
+        tool_args = json.loads(tool_call.function.arguments or "{}")
+        print(f"Calling function: {tool_call.function.name}({tool_args})")
+print(message.content)
 
 
 def main():
